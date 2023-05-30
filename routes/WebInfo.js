@@ -6,7 +6,7 @@ const {
   createWebinfo,
   updateWebInfo,
   getWebinfo,
-} = require("../controller/WebInfo");
+} = require("../controller/Webinfo");
 
 router
   .route("/")

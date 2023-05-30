@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "jet-cms-api",
+      name: "jiguur-cms-api",
       script: "npm start",
       args: ["--color"],
       env: {
