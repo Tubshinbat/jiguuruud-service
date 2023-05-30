@@ -4,30 +4,26 @@ const { protect, authorize } = require("../middleware/protect");
 
 const {
   createPage,
-  getPage,
   getPages,
-  getCountPages,
-  getSlug,
-  multDeletePages,
+  getFullData,
+  getCountPage,
+  multDeletePage,
+  getPage,
   updatePage,
-  getMenuData,
-  getFooterData,
-} = require("../controller/Page");
+  getSlugPage,
+} = require("../controller/Pages");
 
 router
   .route("/")
   .post(protect, authorize("admin", "operator"), createPage)
   .get(getPages);
 
-router.route("/slug/:slug").get(getSlug);
-router.route("/menu/:id").get(getMenuData);
-router.route("/footermenu/:id").get(getFooterData);
-
+router.route("/excel").get(getFullData);
+router.route("/slug/:slug").get(getSlugPage);
 router
   .route("/count")
-  .get(protect, authorize("admin", "operator"), getCountPages);
-
-router.route("/delete").delete(protect, authorize("admin"), multDeletePages);
+  .get(protect, authorize("admin", "operator"), getCountPage);
+router.route("/delete").delete(protect, authorize("admin"), multDeletePage);
 router
   .route("/:id")
   .get(getPage)

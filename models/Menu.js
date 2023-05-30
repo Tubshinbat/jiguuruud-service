@@ -49,7 +49,7 @@ const MenuSchema = new mongoose.Schema({
 
   model: {
     type: String,
-    enum: ["news", "employee", "contact", "medias"],
+    enum: ["news", "services", "contact", "faq"],
   },
 
   position: {

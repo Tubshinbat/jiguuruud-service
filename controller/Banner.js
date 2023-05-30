@@ -246,7 +246,7 @@ exports.getBanner = asyncHandler(async (req, res) => {
 });
 
 exports.updateBanner = asyncHandler(async (req, res) => {
-  const banner = await findById(req.params.id);
+  let banner = await Banner.findById(req.params.id);
   const { name, details } = req.body;
   const language = req.cookies.language || "mn";
 
@@ -260,7 +260,7 @@ exports.updateBanner = asyncHandler(async (req, res) => {
     details,
   };
 
-  if (valueRequired(req.body.type) == "photo") req.body.video = "";
+  if (req.body.type == "photo") req.body.video = "";
   else req.body.picture = "";
 
   req.body.updateUser = req.userId;

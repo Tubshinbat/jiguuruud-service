@@ -8,65 +8,68 @@ const PageSchema = new mongoose.Schema({
     default: false,
   },
 
-  // NEWSCATEGORIES CONFIG
-  isNewsCategory: {
+  mainLink: {
     type: Boolean,
     enum: [true, false],
     default: false,
   },
 
-  newsCategories: [
-    {
-      type: mongoose.Schema.ObjectId,
-      ref: "NewsCategories",
-    },
-  ],
-
-  // MENU CONFIG
-  isMenu: {
+  newsActive: {
     type: Boolean,
     enum: [true, false],
     default: false,
   },
 
-  isMenuList: {
+  listActive: {
     type: Boolean,
     enum: [true, false],
     default: false,
   },
 
-  isMenuPageList: {
+  pageActive: {
     type: Boolean,
     enum: [true, false],
     default: false,
   },
 
-  // Page
-  isPage: {
+  pageParentActive: {
     type: Boolean,
     enum: [true, false],
     default: false,
   },
 
-  chosenPage: {
-    type: mongoose.Schema.ObjectId,
-    ref: "Page",
-  },
-
-  // Modal
-  isModal: {
+  modalActive: {
     type: Boolean,
     enum: [true, false],
     default: false,
+  },
+
+  choiseModal: {
+    type: String,
   },
 
   modal: {
     type: String,
-    enum:['About','Admission','Banner','Book','Contact','Employees','Fact','Faq','FastLink','FooterMenu',"Media", "MediaCategory", "Menu","News","NewsCategories","Page", "Partner", "Position", "Profession", "Service", "SocialLink", "Statistics_sub","Statistics", 'TopLink']
   },
 
-  // MENU CONFIG
+  mn: {
+    name: {
+      type: String,
+    },
 
+    pageInfo: {
+      type: String,
+    },
+  },
+  eng: {
+    name: {
+      type: String,
+    },
+
+    pageInfo: {
+      type: String,
+    },
+  },
   menu: [
     {
       type: mongoose.Schema.ObjectId,
@@ -81,48 +84,38 @@ const PageSchema = new mongoose.Schema({
     },
   ],
 
-  // Details
-  eng: {
-    name: {
-      type: String,
+  categories: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: "NewsCategory",
     },
-    pageInfo: {
-      type: String,
-    },
+  ],
+
+  pictures: {
+    type: [String],
   },
 
-  mn: {
-    name: {
-      type: String,
-    },
-    pageInfo: {
-      type: String,
-    },
+  page: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Page",
   },
 
   views: {
     type: Number,
   },
 
-  pictures: {
-    type: [String],
-  },
-
   createAt: {
     type: Date,
     default: Date.now,
   },
-
   updateAt: {
     type: Date,
     default: Date.now,
   },
-
   createUser: {
     type: mongoose.Schema.ObjectId,
     ref: "User",
   },
-
   updateUser: {
     type: mongoose.Schema.ObjectId,
     ref: "User",

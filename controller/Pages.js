@@ -1,108 +1,144 @@
 const Page = require("../models/Page");
-
-// utils
+const Menu = require("../models/Menu");
+// const Platform = require("../models/Platform");
+const Services = require("../models/Service");
+const Partner = require("../models/Partner");
+const FooterMenu = require("../models/FooterMenu");
+const User = require("../models/User");
+const NewsCategories = require("../models/NewsCategories");
+const News = require("../models/News");
 const MyError = require("../utils/myError");
+const asyncHandler = require("express-async-handler");
+// const fs = require("fs");
 const paginate = require("../utils/paginate");
-
-// Lib
-const { imageDelete } = require("../lib/photoUpload");
+const { multImages, fileUpload, imageDelete } = require("../lib/photoUpload");
 const { valueRequired } = require("../lib/check");
 
-// Plus
-const asyncHandler = require("express-async-handler");
-const {
-  useNewsCategorySearch,
-  usePageSearch,
-  useMenuSearch,
-  useFooterMenuSearch,
-  RegexOptions,
-  userSearch,
-} = require("../lib/searchOfterModel");
-const { query } = require("express");
-const { create } = require("../models/Page");
-
-exports.createPage = asyncHandler(async (req, res) => {
+exports.createPage = asyncHandler(async (req, res, next) => {
+  const language = req.cookies.language || "mn";
   req.body.createUser = req.userId;
   req.body.status = req.body.status || true;
-  req.body.isNewsCategory = req.body.isNewsCategory || false;
-  req.body.isMenu = req.body.isMenu || false;
-  req.body.isMenuList = req.body.isMenuList || false;
-  req.body.isMenuPageList = req.body.isMenuPageList || false;
-  req.body.isPage = req.body.isPage || false;
-  req.body.isModal = req.body.isModal || false;
+  req.body.newsActive = req.body.newsActive || false;
+  req.body.listActive = req.body.listActive || false;
+  const mainLink = req.body.mainLink || false;
 
-  // FIELDS
-  const newsCategories = req.body.categories;
-  const footerMenu = req.body.footerMenu;
-  const menu = req.body.menu;
-  const createAt = req.body.createAt;
+  const name = req.body.name;
+  const pageInfo = req.body.pageInfo;
 
-  if (!valueRequired(createAt)) {
-    req.body.createAt = Date.now();
-  }
+  ["language", "name", "pageInfo"].map((data) => delete req.body[data]);
 
-  if (req.body.isNewsCategory === true) {
-    if (valueRequired(newsCategories) === false || newsCategories.length <= 0)
-      req.body.categories = [];
-  } else {
-    delete req.body.newsCategories;
-  }
+  req.body[language] = {
+    name,
+    pageInfo,
+  };
 
-  if (req.body.isMenu === true) {
-  } else {
-    req.body.isMenuList = false;
-    req.body.isMenuPageList = false;
-  }
-
-  if (req.body.isPage === true) {
-  } else {
-    delete req.body.page;
-  }
-
-  if (req.body.isModal == true) {
-  } else {
-    delete req.body.modal;
-  }
-
-  // main menus
-  if (valueRequired(footerMenu) === false || footerMenu.length <= 0) {
-    footerMenu = [];
-  }
-
-  if (valueRequired(menu) === false || menu.length <= 0) {
-    menu = [];
-  }
-
-  if (valueRequired(req.body.menu) === false || req.body.menu.length <= 0) {
+  if (valueRequired(req.body.menu) === false || req.body.menu.length <= 0)
     req.body.menu = [];
+
+  if (
+    valueRequired(req.body.footerMenu) === false ||
+    req.body.footerMenu.length <= 0
+  )
+    req.body.footerMenu = [];
+  if (
+    valueRequired(req.body.categories) === false ||
+    req.body.categories.length <= 0
+  )
+    req.body.categories = [];
+
+  if (mainLink === true) {
+    const menu = req.body.menu;
+    if (valueRequired(menu)) {
+      const pages = await Page.find({}).where("menu").in(req.body.menu);
+      if (pages.length >= 1) {
+        throw new MyError(
+          "Өмнө цэсний тохиргоог тухайн цэс дээр идэвхжүүлсэн байна"
+        );
+      }
+    }
+    req.body.mainLink = mainLink;
+  } else {
+    req.body.mainLink = false;
   }
+
+  const page = await Page.create(req.body);
+
+  res.status(200).json({
+    success: true,
+    data: page,
+  });
 });
 
-exports.getPages = asyncHandler(async (req, res) => {
-  // Pagination
-  const page = parseInt(req.query.page) || 1;
+const newsCategorySearch = async (key) => {
+  // const ids = await NewsCategories.find({
+  //   name: { $regex: ".*" + key + ".*", $options: "i" },
+  // }).select("_id");
+  // return ids;
+};
+
+// const platformSearch = async (key) => {
+//   const ids = await Platform.find({
+//     name: { $regex: ".*" + key + ".*", $options: "i" },
+//   }).select("_id");
+//   return ids;
+// };
+
+const serviceSearch = async (key) => {
+  const ids = await Services.find({
+    name: { $regex: ".*" + key + ".*", $options: "i" },
+  }).select("_id");
+  return ids;
+};
+
+const partnerSearch = async (key) => {
+  const ids = await Partner.find({
+    name: { $regex: ".*" + key + ".*", $options: "i" },
+  }).select("_id");
+  return ids;
+};
+
+const menuSearch = async (key) => {
+  const ids = await Menu.find({
+    name: { $regex: ".*" + key + ".*", $options: "i" },
+  }).select("_id");
+  return ids;
+};
+
+const footerMenuSearch = async (key) => {
+  const ids = await FooterMenu.find({
+    name: { $regex: ".*" + key + ".*", $options: "i" },
+  }).select("_id");
+  return ids;
+};
+
+const useSearch = async (userFirstname) => {
+  const userData = await User.find({
+    firstname: { $regex: ".*" + userFirstname + ".*", $options: "i" },
+  }).select("_id");
+  return userData;
+};
+
+exports.getPages = asyncHandler(async (req, res, next) => {
+  const page = parseInt(req.query.pageNumber) || 1;
   const limit = parseInt(req.query.limit) || 25;
   let sort = req.query.sort || { createAt: -1 };
   const select = req.query.select;
 
-  // FIELDS
+  // NEWS FIELDS
   const status = req.query.status;
-  const isNewsCategory = req.body.isNewsCategory;
-  const newsCategories = req.body.newsCategories;
-  const isMenu = req.body.isMenu;
-  const isMenuList = req.body.isMenuList;
-  const isMenuPageList = req.body.isMenuPageList;
-  const isPage = req.body.isPage;
-  const chosenPage = req.body.chosenPage;
-  const isModal = req.body.isModal;
-  const modal = req.body.modal;
-  const menu = req.body.menu;
-  const footerMenu = req.body.footerMenu;
-  const name = req.body.name;
-  const pageInfo = req.body.pageInfo;
-  const createUser = req.body.createUser;
-  const updateUser = req.body.updateUser;
-
+  const newsActive = req.query.newsActive;
+  const listActive = req.query.listActive;
+  const menu = req.query.menu;
+  const footerMenu = req.query.footerMenu;
+  const categories = req.query.categories;
+  const name = req.query.name;
+  const createUser = req.query.createUser;
+  const updateUser = req.query.updateUser;
+  const modal = req.query.modal;
+  const choiseModal = req.query.choiseModal;
+  const pageParent = req.query.parent;
+  const choisePage = req.query.page;
+  const mainLink = req.query.mainLink;
   const query = Page.find();
 
   if (valueRequired(status)) {
@@ -111,153 +147,146 @@ exports.getPages = asyncHandler(async (req, res) => {
     } else query.where("status").equals(status);
   }
 
-  if (valueRequired(isNewsCategory)) {
-    if (isNewsCategory.split(",").length > 1) {
-      query.where("isNewsCategory").in(isNewsCategory.split(","));
-    } else query.where("isNewsCategory").equals(isNewsCategory);
+  if (valueRequired(choiseModal)) {
+    if (valueRequired(modal)) {
+      switch (choiseModal) {
+        // case "platforms": {
+        //   const ids = await platformSearch(modal);
+        //   if (ids) {
+        //     query.where("modal").equals(ids);
+        //   }
+        //   break;
+        // }
+        case "services": {
+          const ids = await serviceSearch(modal);
+          if (ids) {
+            query.where("modal").equals(ids);
+          }
+          break;
+        }
+        case "partners": {
+          const ids = await partnerSearch(modal);
+          if (ids) {
+            query.where("modal").equals(ids);
+          }
+          break;
+        }
+      }
+    }
+  }
+  if (valueRequired(mainLink)) {
+    if (mainLink.split(",").length > 1) {
+      query.where("mainLink").in(mainLink.split(","));
+    } else query.where("mainLink").equals(mainLink);
   }
 
-  if (valueRequired(isMenu)) {
-    if (isMenu.split(",").length > 1) {
-      query.where("isMenu").in(isMenu.split(","));
-    } else query.where("isMenu").equals(isMenu);
+  if (valueRequired(newsActive)) {
+    if (newsActive.split(",").length > 1) {
+      query.where("newsActive").in(newsActive.split(","));
+    } else query.where("newsActive").equals(newsActive);
   }
 
-  if (valueRequired(isMenuList)) {
-    if (isMenuList.split(",").length > 1) {
-      query.where("isMenuList").in(isMenuList.split(","));
-    } else query.where("isMenuList").equals(isMenuList);
+  if (valueRequired(choiseModal)) {
+    query.where("choiseModal").equals(choiseModal);
   }
 
-  if (valueRequired(isMenuPageList)) {
-    if (isMenuPageList.split(",").length > 1) {
-      query.where("isMenuPageList").in(isMenuPageList.split(","));
-    } else query.where("isMenuPageList").equals(isMenuPageList);
+  if (valueRequired(pageParent)) {
+    query.where("page").in(pageParent);
   }
 
-  if (valueRequired(isPage)) {
-    if (isPage.split(",").length > 1) {
-      query.where("isPage").in(isPage.split(","));
-    } else query.where("isPage").equals(isPage);
-  }
-
-  if (valueRequired(isModal)) {
-    if (isModal.length > 1) {
-      query.where("isModal").in(isModal.split(","));
-    } else query.where("isModal").equals(isModal);
-  }
-
-  if (valueRequired(chosenPage)) {
-    const result = await usePageSearch(chosenPage);
-    if (result && result.length > 0) {
-      query.where("chosenPage").in(result);
+  if (valueRequired(choisePage)) {
+    const pageIds = await Page.find({
+      name: { $regex: ".*" + choisePage + ".*", $options: "i" },
+    }).select("_id");
+    if (pageIds.length > 0) {
+      query.where("page").equals(pageIds);
     }
   }
 
-  if (valueRequired(newsCategories)) {
-    const result = await useNewsCategorySearch(newsCategories);
-    if (result && result.length > 0) {
-      query.where("newsCategories").in(result);
-    }
+  if (valueRequired(listActive)) {
+    if (listActive.split(",").length > 1) {
+      query.where("listActive").in(listActive.split(","));
+    } else query.where("listActive").equals(listActive);
   }
 
-  if (modal) {
-    query.where("modal").in(modal.split(","));
+  if (valueRequired(status)) {
+    if (status.split(",").length > 1) {
+      query.where("status").in(status.split(","));
+    } else query.where("status").equals(status);
   }
 
-  if (valueRequired(menu)) {
-    const result = await useMenuSearch(menu);
-    if (result && result.length > 0) {
-      query.where("menu").in(result);
-    }
-  }
-
-  if (valueRequired(footerMenu)) {
-    const result = await useFooterMenuSearch(footerMenu);
-    if (result && result.length > 0) {
-      query.where("footerMenu").in(result);
-    }
-  }
-
-  if (valueRequired(name)) {
-    query.where({
-      $or: [
-        {
-          "eng.name": RegexOptions(name),
-          "mn.name": RegexOptions(name),
-        },
-      ],
-    });
-  }
-
-  if (valueRequired(pageInfo)) {
-    query.where({
-      $or: [
-        {
-          "eng.pageInfo": RegexOptions(pageInfo),
-          "mn.pageInfo": RegexOptions(pageInfo),
-        },
-      ],
-    });
-  }
+  if (valueRequired(name))
+    query.find({ name: { $regex: ".*" + name + ".*", $options: "i" } });
 
   if (valueRequired(createUser)) {
-    const result = await userSearch(createUser);
-    if (result && result.length > 0) {
-      query.where("createUser").in(result);
+    const userData = await useSearch(createUser);
+    if (userData) {
+      query.where("createUser").in(userData);
     }
   }
 
   if (valueRequired(updateUser)) {
-    const result = await userSearch(updateUser);
-    if (result && result.length > 0) {
-      query.where("updateUser").in(result);
+    const userData = await useSearch(updateUser);
+    if (userData) {
+      query.where("updateUser").in(userData);
     }
   }
 
-  // SORT
+  if (valueRequired(menu)) {
+    const menus = await menuSearch(menu);
+    if (menus) {
+      query.where("menu").in(menus);
+    }
+  }
+
+  if (valueRequired(footerMenu)) {
+    const footMenus = await menuSearch(footerMenu);
+    if (footMenus) {
+      query.where("footerMenu").in(footMenus);
+    }
+  }
+
+  // if (valueRequired(categories)) {
+  //   const cats = await newsCategorySearch(categories);
+  //   if (cats) {
+  //     query.where("categories").in(cats);
+  //   }
+  // }
+
+  if (valueRequired(modal)) {
+    query.where("modal").equals(modal);
+  }
 
   if (valueRequired(sort)) {
     if (typeof sort === "string") {
       const spliteSort = sort.split(":");
-      let sortName = "";
-      if (
-        spliteSort[0] === "name" ||
-        spliteSort[0] === "details" ||
-        spliteSort[0] === "shortDetails"
-      ) {
-        sortName = `${language}.${spliteSort[0]}`;
-      } else {
-        sortName = spliteSort[0];
-      }
-
       let convertSort = {};
       if (spliteSort[1] === "ascend") {
-        convertSort = { [sortName]: 1 };
+        convertSort = { [spliteSort[0]]: 1 };
       } else {
-        convertSort = { [sortName]: -1 };
+        convertSort = { [spliteSort[0]]: -1 };
       }
-      if (sortName != "undefined") query.sort(convertSort);
+      if (spliteSort[0] != "undefined") query.sort(convertSort);
     } else {
       query.sort(sort);
     }
   }
 
-  query.select(select);
-  query.populate("newsCategories");
-  query.populate("chosenPage");
+  query.populate("categories");
+  query.populate("menu");
+  query.populate("page");
   query.populate("footerMenu");
-  query.populate("Menu");
+  query.select(select);
   query.populate("createUser");
   query.populate("updateUser");
 
   const qc = query.toConstructor();
   const clonedQuery = new qc();
   const result = await clonedQuery.count();
-  const pagination = await paginate(page, limit, News, result);
+
+  const pagination = await paginate(page, limit, Page, result);
   query.limit(limit);
   query.skip(pagination.start - 1);
-
   const pages = await query.exec();
 
   res.status(200).json({
@@ -268,28 +297,27 @@ exports.getPages = asyncHandler(async (req, res) => {
   });
 });
 
-exports.getFullData = asyncHandler(async (req, res) => {
-
+exports.getFullData = asyncHandler(async (req, res, next) => {
   let sort = req.query.sort || { createAt: -1 };
   const select = req.query.select;
 
-  // FIELDS
+  // NEWS FIELDS
   const status = req.query.status;
-  const isNewsCategory = req.body.isNewsCategory;
-  const newsCategories = req.body.newsCategories;
-  const isMenu = req.body.isMenu;
-  const isMenuList = req.body.isMenuList;
-  const isMenuPageList = req.body.isMenuPageList;
-  const isPage = req.body.isPage;
-  const chosenPage = req.body.chosenPage;
-  const isModal = req.body.isModal;
-  const modal = req.body.modal;
-  const menu = req.body.menu;
-  const footerMenu = req.body.footerMenu;
-  const name = req.body.name;
-  const pageInfo = req.body.pageInfo;
-  const createUser = req.body.createUser;
-  const updateUser = req.body.updateUser;
+  const newsActive = req.query.newsActive;
+  const listActive = req.query.listActive;
+  const pageActive = req.query.pageActive;
+  const pageParentActive = req.query.pageParentActive;
+  const modalActive = req.query.modalActive;
+
+  const menu = req.query.menu;
+  const footerMenu = req.query.footerMenu;
+  const categories = req.query.categories;
+  const modal = req.query.modal;
+  const name = req.query.name;
+  const createUser = req.query.createUser;
+  const updateUser = req.query.updateUser;
+  const choiseModal = req.query.choiseModal;
+  const mainLink = req.query.mainLink;
 
   const query = Page.find();
 
@@ -299,224 +327,375 @@ exports.getFullData = asyncHandler(async (req, res) => {
     } else query.where("status").equals(status);
   }
 
-  if (valueRequired(isNewsCategory)) {
-    if (isNewsCategory.split(",").length > 1) {
-      query.where("isNewsCategory").in(isNewsCategory.split(","));
-    } else query.where("isNewsCategory").equals(isNewsCategory);
+  if (valueRequired(mainLink)) {
+    if (mainLink.split(",").length > 1) {
+      query.where("mainLink").in(mainLink.split(","));
+    } else query.where("mainLink").equals(mainLink);
   }
 
-  if (valueRequired(isMenu)) {
-    if (isMenu.split(",").length > 1) {
-      query.where("isMenu").in(isMenu.split(","));
-    } else query.where("isMenu").equals(isMenu);
+  if (valueRequired(pageActive)) {
+    if (pageActive.split(",").length > 1) {
+      query.where("pageActive").in(pageActive.split(","));
+    } else query.where("pageActive").equals(pageActive);
   }
 
-  if (valueRequired(isMenuList)) {
-    if (isMenuList.split(",").length > 1) {
-      query.where("isMenuList").in(isMenuList.split(","));
-    } else query.where("isMenuList").equals(isMenuList);
+  if (valueRequired(pageParentActive)) {
+    if (pageParentActive.split(",").length > 1) {
+      query.where("pageParentActive").in(pageParentActive.split(","));
+    } else query.where("pageParentActive").equals(pageParentActive);
   }
 
-  if (valueRequired(isMenuPageList)) {
-    if (isMenuPageList.split(",").length > 1) {
-      query.where("isMenuPageList").in(isMenuPageList.split(","));
-    } else query.where("isMenuPageList").equals(isMenuPageList);
+  if (valueRequired(modalActive)) {
+    if (modalActive.split(",").length > 1) {
+      query.where("modalActive").in(modalActive.split(","));
+    } else query.where("modalActive").equals(modalActive);
   }
 
-  if (valueRequired(isPage)) {
-    if (isPage.split(",").length > 1) {
-      query.where("isPage").in(isPage.split(","));
-    } else query.where("isPage").equals(isPage);
-  }
-
-  if (valueRequired(isModal)) {
-    if (isModal.length > 1) {
-      query.where("isModal").in(isModal.split(","));
-    } else query.where("isModal").equals(isModal);
-  }
-
-  if (valueRequired(chosenPage)) {
-    const result = await usePageSearch(chosenPage);
-    if (result && result.length > 0) {
-      query.where("chosenPage").in(result);
+  if (valueRequired(choiseModal)) {
+    query.where("choiseModal").equals(choiseModal);
+    if (valueRequired(modal)) {
+      query.where("modal").equals(modal);
     }
   }
 
-  if (valueRequired(newsCategories)) {
-    const result = await useNewsCategorySearch(newsCategories);
-    if (result && result.length > 0) {
-      query.where("newsCategories").in(result);
-    }
+  if (valueRequired(newsActive)) {
+    if (newsActive.split(",").length > 1) {
+      query.where("newsActive").in(newsActive.split(","));
+    } else query.where("newsActive").equals(newsActive);
   }
 
-  if (modal) {
-    query.where("modal").in(modal.split(","));
+  if (valueRequired(listActive)) {
+    if (listActive.split(",").length > 1) {
+      query.where("listActive").in(listActive.split(","));
+    } else query.where("listActive").equals(listActive);
   }
 
-  if (valueRequired(menu)) {
-    const result = await useMenuSearch(menu);
-    if (result && result.length > 0) {
-      query.where("menu").in(result);
-    }
+  if (valueRequired(status)) {
+    if (status.split(",").length > 1) {
+      query.where("status").in(status.split(","));
+    } else query.where("status").equals(status);
   }
 
-  if (valueRequired(footerMenu)) {
-    const result = await useFooterMenuSearch(footerMenu);
-    if (result && result.length > 0) {
-      query.where("footerMenu").in(result);
-    }
-  }
-
-  if (valueRequired(name)) {
-    query.where({
-      $or: [
-        {
-          "eng.name": RegexOptions(name),
-          "mn.name": RegexOptions(name),
-        },
-      ],
-    });
-  }
-
-  if (valueRequired(pageInfo)) {
-    query.where({
-      $or: [
-        {
-          "eng.pageInfo": RegexOptions(pageInfo),
-          "mn.pageInfo": RegexOptions(pageInfo),
-        },
-      ],
-    });
-  }
+  if (valueRequired(name))
+    query.find({ name: { $regex: ".*" + name + ".*", $options: "i" } });
 
   if (valueRequired(createUser)) {
-    const result = await userSearch(createUser);
-    if (result && result.length > 0) {
-      query.where("createUser").in(result);
+    const userData = await useSearch(createUser);
+    if (userData) {
+      query.where("createUser").in(userData);
     }
   }
 
   if (valueRequired(updateUser)) {
-    const result = await userSearch(updateUser);
-    if (result && result.length > 0) {
-      query.where("updateUser").in(result);
+    const userData = await useSearch(updateUser);
+    if (userData) {
+      query.where("updateUser").in(userData);
     }
   }
 
-  // SORT
+  if (valueRequired(menu)) {
+    const menus = await menuSearch(menu);
+    if (menus) {
+      query.where("menu").in(menus);
+    }
+  }
+
+  if (valueRequired(footerMenu)) {
+    const footMenus = await menuSearch(footerMenu);
+    if (footMenus) {
+      query.where("footerMenu").in(footMenus);
+    }
+  }
+
+  // if (valueRequired(categories)) {
+  //   const cats = await newsCategorySearch(categories);
+  //   if (cats) {
+  //     query.where("categories").in(cats);
+  //   }
+  // }
 
   if (valueRequired(sort)) {
     if (typeof sort === "string") {
       const spliteSort = sort.split(":");
-      let sortName = "";
-      if (
-        spliteSort[0] === "name" ||
-        spliteSort[0] === "details" ||
-        spliteSort[0] === "shortDetails"
-      ) {
-        sortName = `${language}.${spliteSort[0]}`;
-      } else {
-        sortName = spliteSort[0];
-      }
-
       let convertSort = {};
       if (spliteSort[1] === "ascend") {
-        convertSort = { [sortName]: 1 };
+        convertSort = { [spliteSort[0]]: 1 };
       } else {
-        convertSort = { [sortName]: -1 };
+        convertSort = { [spliteSort[0]]: -1 };
       }
-      if (sortName != "undefined") query.sort(convertSort);
+      if (spliteSort[0] != "undefined") query.sort(convertSort);
     } else {
       query.sort(sort);
     }
   }
-
+  query.populate({ path: "menu", select: "name -_id" });
+  query.populate({ path: "footerMenu", select: "name -_id" });
+  query.populate({ path: "categories", select: "name -_id" });
+  query.populate({ path: "page", select: "name -_id" });
   query.select(select);
-  query.populate("newsCategories");
-  query.populate("chosenPage");
-  query.populate("footerMenu");
-  query.populate("Menu");
-  query.populate("createUser");
-  query.populate("updateUser");
+  query.populate({ path: "createUser", select: "firstname -_id" });
+  query.populate({ path: "updateUser", select: "firstname -_id" });
 
-  const pages = await query.exec();
+  const page = await query.exec();
 
   res.status(200).json({
     success: true,
-    count: pages.length,
-    data: pages,
+    count: page.length,
+    data: page,
   });
 });
 
-exports.multDeletePage = asyncHandler(async (req, res) => {
+exports.multDeletePage = asyncHandler(async (req, res, next) => {
   const ids = req.queryPolluted.id;
-  const findDatas = await Page.find({ _id: { $in: ids } });
+  const findPage = await Page.find({ _id: { $in: ids } });
 
-  if (findDatas.length <= 0) {
-    throw new MyError("Сонгосон өгөгдөлүүд олдсонгүй.", 404);
+  if (findPage.length <= 0) {
+    throw new MyError("Таны сонгосон мэдээнүүд олдсонгүй", 400);
   }
-
-  findDatas.map((el) => {
-    if (el.pictures && el.pictures.length > 0) {
-      el.pictures.map(async (picture) => {
-        await imageDelete(picture);
-      });
-    }
+  findPage.map(async (el) => {
+    el.pictures && (await imageDelete(el.pictures));
   });
 
-  const pages = await Page.deleteMany({ _id: { $in: ids } });
+  const news = await Page.deleteMany({ _id: { $in: ids } });
 
   res.status(200).json({
     success: true,
   });
 });
 
-exports.getPage = asyncHandler(async (req, res) => {
-  const page = await Page.findById(req.params.id);
-  const modal = req.body.modal;
+exports.getPage = asyncHandler(async (req, res, next) => {
+  const page = await Page.findByIdAndUpdate(req.params.id)
+    .populate("categories")
+    .populate("menu")
+    .populate("footerMenu")
+    .populate("createUser")
+    .populate("updateUser")
+    .populate("page");
 
+  // Сонголтуудаас хамаарсан илгээх датануудыг зарлна
+  let news = [];
+  let childPages = [];
+  let menus = [];
   let pages = [];
+
   if (!page) {
-    throw new MyError("Өгөгдөл олдсонгүй", 404);
+    throw new MyError("Тухайн хуудасны мэдээлэл олдсонгүй. ", 404);
   }
 
-  const query = Page.findById(req.params.id);
-
-  if (page.isNewsCategory == true) {
-    query.populate("newsCategories");
-  }
-
-  if (page.isMenu == true) {
-    if (page.isMenuList == true) {
-      query.populate("menu");
-      query.populate("footerMenu");
+  if (page.mainLink === true) {
+    // page active сонгосон байвал сонгосон цэстэй холбогдсон бүх хуудсуудыг илгээнэ
+    if (page.pageActive === true) {
+      pages = await Page.find({
+        $or: [
+          { menu: { $in: page.menu } },
+          { footerMenu: { $in: page.footerMenu } },
+        ],
+      }).sort({ createAt: -1 });
     }
-    if (page.isMenuPageList == true) {
-      pages = await Page.find({})
-        .where("menu")
+    if (page.listActive === true) {
+      // Дэд цэсүүдийг олно
+      menus = await Menu.find({})
+        .where("parentId")
         .in(page.menu)
-        .where("footerMenu")
-        .in(page.footerMenu).sort({createAt: -1});
+        .sort({ createAt: -1 });
+      const footerMenus = await FooterMenu.find({})
+        .where("parentId")
+        .in(page.footerMenu)
+        .sort({ createAt: -1 });
+      if (footerMenus.length > 0) {
+        menus = [...menus, ...footerMenus];
+      }
     }
   }
 
-  chosenPages = await Page.find({}).where("chosenPage").equals(page._id).sort({createAt: -1});
-  const modals = await Page.find({}).where("modal").equals(modal).sort({createAt: -1});
-  const result = await query.exec();
+  if (page.newsActive === true) {
+    news = await News.find({})
+      .where("categories")
+      .in(page.categories)
+      .limit(3)
+      .sort({ createAt: -1 });
+  }
+
+  if (page.pageParentActive === true) {
+    childPages = await Page.find({})
+      .where("page")
+      .equals(req.params.id)
+      .sort({ createAt: -1 });
+  }
+
+  // if (page.listActive) {
+  //   const menuId =
+  //     page.menu && page.menu.length > 0 && page.menu.map((menu) => menu._id);
+  //   menus = await Menu.find({})
+  //     .where("parentId")
+  //     .in(menuId)
+  //     .sort({ createAt: -1 });
+  // }
+
+  // if (page.pageActive) {
+  //   const menuId =
+  //     page.menu && page.menu.length > 0 && page.menu.map((menu) => menu._id);
+  //   pages = await Page.find({}).where("menu").in(menuId).sort({ createAt: -1 });
+  // }
 
   res.status(200).json({
     success: true,
-    data: result,
-    modals,
-    chosenPages,
+    data: page,
+    news,
+    childPages,
+    menus,
     pages,
   });
 });
 
-exports.getPageCount = asyncHandler(async (req, res) => {
-  const pageCount = await Page.count();
+exports.updatePage = asyncHandler(async (req, res, next) => {
+  let page = await Page.findById(req.params.id);
+
+  if (!page) {
+    throw new MyError("Тухайн мэдээ олдсонгүй. ", 404);
+  }
+
+  if (
+    valueRequired(req.body.categories) === false ||
+    req.body.categories == "[object Object]"
+  ) {
+    req.body.categories = [];
+  }
+
+  if (
+    valueRequired(req.body.footerMenu) === false ||
+    req.body.footerMenu == "[object Object]"
+  ) {
+    req.body.footerMenu = [];
+  }
+
+  if (
+    valueRequired(req.body.menu) === false ||
+    req.body.menu == "[object Object]"
+  ) {
+    req.body.menu = [];
+  } else if (typeof req.body.menu === "string") {
+    req.body.menu = [req.body.menu];
+  }
+
+  if (valueRequired(req.body.page) === false) {
+    delete req.body.page;
+  }
+
+  if (!valueRequired(req.body.pictures)) {
+    req.body.pictures = [];
+  }
+
+  req.body.updateUser = req.userId;
+  req.body.updateAt = Date.now();
+
+  page = await Page.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
   res.status(200).json({
     success: true,
-    data: pageCount,
+    data: page,
+  });
+});
+
+exports.getCountPage = asyncHandler(async (req, res, next) => {
+  const count = await Page.count();
+  res.status(200).json({
+    success: true,
+    data: count,
+  });
+});
+
+exports.getSlugPage = asyncHandler(async (req, res) => {
+  let menu = await Menu.findOne({ slug: req.params.slug });
+  let menuType = "menu";
+
+  // Тухайн сонгосон мэню хөлны байна уу дээд толгойх байна уу шалгана
+  if (!menu) {
+    menu = await FooterMenu.findOne({ slug: req.params.slug });
+    menuType = "footerMenu";
+  }
+
+  if (!menu) {
+    throw new MyError("Өгөгдөл олдсонгүй", 404);
+  }
+
+  // Дата
+  let news = [];
+  let pages = [];
+  let page = {};
+  let menus = [];
+  let linkPages = [];
+  let parentSameMenus = [];
+
+  page = await Page.findOne({})
+    .where(menuType)
+    .in(menu._id)
+    .where("mainLink")
+    .equals(true)
+    .sort({ createAt: -1 });
+
+  if (!page) {
+    page = await Page.findOne({})
+      .where(menuType)
+      .in(menu._id)
+      .sort({ createAt: -1 });
+  }
+
+  if (page && page.mainLink === true) {
+    // page active сонгосон байвал сонгосон цэстэй холбогдсон бүх хуудсуудыг илгээнэ
+    if (page.pageActive === true) {
+      pages = await Page.find({
+        $or: [
+          { menu: { $in: page.menu } },
+          { footerMenu: { $in: page.footerMenu } },
+        ],
+      }).sort({ createAt: -1 });
+    }
+    if (page.listActive === true) {
+      // Дэд цэсүүдийг олно
+      if (menuType === "footerMenu") {
+        menus = await FooterMenu.find({})
+          .where("parentId")
+          .in(page.footerMenu)
+          .sort({ createAt: -1 });
+      } else {
+        menus = await Menu.find({})
+          .where("parentId")
+          .in(page.menu)
+          .sort({ createAt: -1 });
+      }
+    }
+  }
+
+  if (page && page.newsActive === true) {
+    news = await News.find({})
+      .where("categories")
+      .in(page.categories)
+      .limit(3)
+      .populate("categories")
+      .sort({ createAt: -1 });
+  }
+
+  if (page && page.pageParentActive === true) {
+    linkPages = await Page.find({}).where("page").equals(page._id);
+  }
+
+  parentSameMenus = await Menu.find({}).where("parentId").in(menu._id);
+  if (parentSameMenus.length <= 0) {
+    parentSameMenus = await Menu.find({}).where("parentId").in(menu.parentId);
+  }
+
+  res.status(200).json({
+    success: true,
+    menu,
+    page,
+    pages,
+    linkPages,
+    parentSameMenus,
+    news,
+    menus,
   });
 });

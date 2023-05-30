@@ -1,10 +1,8 @@
 const SocialLink = require("../models/SocialLink");
+const MyError = require("../utils/myError");
 const asyncHandler = require("express-async-handler");
 
-// UTILS
-const MyError = require("../utils/myError");
-
-exports.createLinks = asyncHandler(async (req, res) => {
+exports.createLinks = asyncHandler(async (req, res, next) => {
   req.body.createUser = req.userId;
   req.body.updateUser = req.userId;
   let link = await SocialLink.create(req.body);
@@ -15,7 +13,7 @@ exports.createLinks = asyncHandler(async (req, res) => {
   });
 });
 
-exports.getLinks = asyncHandler(async (req, res) => {
+exports.getLinks = asyncHandler(async (req, res, next) => {
   const query = await SocialLink.find({}).sort({ createAt: -1 });
 
   res.status(200).json({
@@ -28,7 +26,7 @@ exports.getLink = asyncHandler(async (req, res) => {
   const link = await SocialLink.findById(req.params.id);
 
   if (!link) {
-    throw new MyError("Өгөгдөл олдсонгүй", 404);
+    throw new MyError(req.params.id + " Тус мэдээний ангилал олдсонгүй.", 404);
   }
 
   res.status(200).json({
@@ -39,11 +37,9 @@ exports.getLink = asyncHandler(async (req, res) => {
 
 exports.deleteLink = asyncHandler(async (req, res) => {
   const link = await SocialLink.findById(req.params.id);
-
   if (!link) {
-    throw new MyError("Өгөгдөл олдсонгүй", 404);
+    throw new MyError(req.params.id + " ангилал олдсонгүй", 404);
   }
-
   link.remove();
 
   res.status(200).json({
@@ -52,14 +48,14 @@ exports.deleteLink = asyncHandler(async (req, res) => {
   });
 });
 
-exports.updateLink = asyncHandler(async (req, res) => {
+exports.updateLink = asyncHandler(async (req, res, next) => {
   const link = await SocialLink.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   if (!link) {
-    throw new MyError("Өгөгдөл олдсонгүй", 404);
+    throw new MyError("Уучлаарай хадгалах явцад алдаа гарлаа", 400);
   }
 
   res.status(200).json({

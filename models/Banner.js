@@ -39,7 +39,7 @@ const BannerSchema = new mongoose.Schema({
     },
   },
 
-  banner: {
+  picture: {
     type: String,
   },
 

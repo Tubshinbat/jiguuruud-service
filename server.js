@@ -14,8 +14,20 @@ var cookieParser = require("cookie-parser");
 
 // Router
 const userRouters = require("./routes/users");
+const uploadRouters = require("./routes/imageUpload");
+const newsCategoriesRouters = require("./routes/NewsCategories");
+const webInfoRouters = require("./routes/WebInfo");
 const newsRouters = require("./routes/News");
+const partnerRouters = require("./routes/Partners");
+const serviceRouters = require("./routes/Services");
+const bannerRouters = require("./routes/Banners");
+const galleryRouters = require("./routes/Gallery");
+const menuRouters = require("./routes/Menu");
+const pageRouters = require("./routes/Pages");
+const socialLinkRouters = require("./routes/SocialLink");
 const errorHandler = require("./middleware/error");
+const faqRouters = require("./routes/Faqs");
+const fileRouters = require("./routes/File");
 const connectDB = require("./config/db");
 
 //ROUTER IMPORT
@@ -79,7 +91,18 @@ app.use(morgan("combined", { stream: accessLogStream }));
 
 app.use("/api/v1/users", userRouters);
 app.use("/api/v1/news", newsRouters);
-
+app.use("/api/v1/news-categories", newsCategoriesRouters);
+app.use("/api/v1/services", serviceRouters);
+app.use("/api/v1/imgupload", uploadRouters);
+app.use("/api/v1/partners", partnerRouters);
+app.use("/api/v1/gallerys", galleryRouters);
+app.use("/api/v1/slinks", socialLinkRouters);
+app.use("/api/v1/faqs", faqRouters);
+app.use("/api/v1/menus", menuRouters);
+app.use("/api/v1/banners", bannerRouters);
+app.use("/api/v1/pages", pageRouters);
+app.use("/api/v1/file", fileRouters);
+app.use("/api/v1/webinfo", webInfoRouters);
 app.use(errorHandler);
 // Алдаа үүсэхэд барьж авч алдааны мэдээллийг клиент тал руу автоматаар мэдээлнэ
 

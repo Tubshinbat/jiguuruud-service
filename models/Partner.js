@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
+const { slugify } = require("transliteration");
 
 const PartnerSchema = new mongoose.Schema({
   status: {
     type: Boolean,
     enum: [true, false],
-    required: [true, "Төлөв сонгоно уу"],
-    default: false,
+    default: true,
   },
+
+  slug: String,
 
   name: {
     type: String,
-    required: [true, "Хуудасны гарчиг оруулна уу"],
+    trim: true,
+    required: [true, "Хамтрагч компанийн нэрийг оруулна уу"],
   },
 
   link: {
@@ -19,6 +22,19 @@ const PartnerSchema = new mongoose.Schema({
 
   logo: {
     type: String,
+  },
+
+  companyInfo: {
+    type: String,
+  },
+
+  cover: {
+    type: String,
+  },
+
+  views: {
+    type: Number,
+    default: 0,
   },
 
   createAt: {
@@ -37,6 +53,17 @@ const PartnerSchema = new mongoose.Schema({
     type: mongoose.Schema.ObjectId,
     ref: "User",
   },
+});
+
+PartnerSchema.pre("save", function (next) {
+  this.slug = slugify(this.name);
+  next();
+});
+
+PartnerSchema.pre("update", function (next) {
+  this.slug = slugify(this.name);
+  this.updateDate = Date.now;
+  next();
 });
 
 module.exports = mongoose.model("Partner", PartnerSchema);

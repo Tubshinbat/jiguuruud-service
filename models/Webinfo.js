@@ -1,27 +1,25 @@
 const mongoose = require("mongoose");
 
 const WebInfoSchema = new mongoose.Schema({
+  logo: {
+    type: String,
+  },
+  whiteLogo: {
+    type: String,
+  },
   mn: {
-    type: {
-      logo: {
-        type: String,
-      },
-      whiteLogo: {
-        type: String,
-      },
-      name: {
-        type: String,
-      },
+    name: {
+      type: String,
+    },
 
-      address: {
-        type: String,
-      },
-      siteInfo: {
-        type: String,
-      },
-      policy: {
-        type: String,
-      },
+    address: {
+      type: String,
+    },
+    siteInfo: {
+      type: String,
+    },
+    policy: {
+      type: String,
     },
   },
 
@@ -37,26 +35,18 @@ const WebInfoSchema = new mongoose.Schema({
   },
 
   eng: {
-    type: {
-      logo: {
-        type: String,
-      },
-      whiteLogo: {
-        type: String,
-      },
-      name: {
-        type: String,
-      },
+    name: {
+      type: String,
+    },
 
-      address: {
-        type: String,
-      },
-      siteInfo: {
-        type: String,
-      },
-      policy: {
-        type: String,
-      },
+    address: {
+      type: String,
+    },
+    siteInfo: {
+      type: String,
+    },
+    policy: {
+      type: String,
     },
   },
 

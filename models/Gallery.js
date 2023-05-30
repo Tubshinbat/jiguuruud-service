@@ -1,33 +1,19 @@
 const mongoose = require("mongoose");
 
-const FaqSchema = new mongoose.Schema({
+const GallerySchema = new mongoose.Schema({
   status: {
     type: Boolean,
     enum: [true, false],
     default: true,
   },
-  mn: {
-    question: {
-      type: String,
-    },
 
-    answer: {
-      type: String,
-    },
+  name: {
+    type: String,
   },
 
-  eng: {
-    question: {
-      type: String,
-    },
-
-    answer: {
-      type: String,
-    },
-  },
-
-  tags: {
-    type: [String],
+  picture: {
+    type: String,
+    required: [true, "Зураг оруулна уу"],
   },
 
   createAt: {
@@ -51,4 +37,4 @@ const FaqSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Faq", FaqSchema);
+module.exports = mongoose.model("Gallery", GallerySchema);

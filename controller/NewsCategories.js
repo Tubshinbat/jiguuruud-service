@@ -1,5 +1,5 @@
 const NewsCategories = require("../models/NewsCategories");
-const News = require("../models/news");
+const News = require("../models/News");
 const asyncHandler = require("express-async-handler");
 const MyError = require("../utils/myError");
 const { valueRequired } = require("../lib/check");
@@ -43,10 +43,9 @@ exports.createNewsCategories = asyncHandler(async (req, res) => {
   });
 });
 
-function createCategory(categories, parentId = null) {
+function createCategory(categories, parentId = null, language) {
   const categoryList = [];
   let category = null;
-  const language = req.cookies.language || "mn";
 
   if (parentId === null) {
     category = categories.filter((cat) => cat.parentId == undefined);
@@ -57,17 +56,51 @@ function createCategory(categories, parentId = null) {
   for (let cate of category) {
     categoryList.push({
       _id: cate._id,
-      [language]: {
-        name: cate.name,
+      mn: {
+        name: cate["mn"] && cate["mn"].name,
       },
+      eng: {
+        name: cate["eng"] && cate["eng"].name,
+      },
+
       slug: cate.slug,
       position: cate.position,
-      children: createCategory(categories, cate._id),
+      children: createCategory(categories, cate._id, language),
     });
   }
 
   return categoryList;
 }
+
+exports.changePosition = asyncHandler(async (req, res) => {
+  menus = req.body.data;
+
+  if (!menus && menus.length > 0) {
+    throw new MyError("Дата илгээгүй байна дахин шалгана уу", 404);
+  }
+
+  const positionChange = (categories, pKey = null) => {
+    if (categories) {
+      categories.map(async (el, index) => {
+        const data = {
+          position: index,
+          parentId: pKey,
+        };
+        await NewsCategories.findByIdAndUpdate(el.key, data);
+        if (el.children && el.children.length > 0) {
+          const parentKey = el.key;
+          positionChange(el.children, parentKey);
+        }
+      });
+    }
+  };
+
+  positionChange(menus);
+
+  res.status(200).json({
+    success: true,
+  });
+});
 
 exports.getNewsCategories = asyncHandler(async (req, res) => {
   NewsCategories.find({})
@@ -80,7 +113,11 @@ exports.getNewsCategories = asyncHandler(async (req, res) => {
         });
       }
       if (categories) {
-        const categoryList = createCategory(categories);
+        const categoryList = createCategory(
+          categories,
+          null,
+          req.cookies.language
+        );
 
         res.status(200).json({
           success: true,
@@ -104,42 +141,64 @@ exports.getNewsCategory = asyncHandler(async (req, res) => {
 });
 
 exports.deleteNewsCategory = asyncHandler(async (req, res) => {
-  const category = NewsCategories.findById(req.params.id);
-  const verify = req.params.verify;
+  const category = await NewsCategories.findByIdAndDelete(req.params.id);
 
-  if (category) {
+  if (!category) {
     throw new MyError("Өгөгдөл олдсонгүй", 404);
   }
 
-  const news = News.find({}).where("categories").in(req.params.id);
+  const news = await News.find({}).where("categories").in(req.params.id);
+
+  // if (news && news.length > 0) {
+  //   if (valueRequired(verify)) {
+  //     throw new MyError(
+  //       "Холбогдсон мэдээллүүдээс тус ангилалыг мөн адил арилгах болно",
+  //       400
+  //     );
+  //   }
+
+  //   if (verify == "cancel") {
+  //     throw new MyError("Устгах үйлдэл амжилтгүй боллоо", 400);
+  //   }
+  // }
+
+  // if (verify == "accept") {
+  //
+  // }
 
   if (news && news.length > 0) {
-    if (valueRequired(verify)) {
-      throw new MyError(
-        "Холбогдсон мэдээллүүдээс тус ангилалыг мөн адил арилгах болно",
-        400
-      );
-    }
-
-    if (verify == "cancel") {
-      throw new MyError("Устгах үйлдэл амжилтгүй боллоо", 400);
-    }
-  }
-
-  if (verify == "accept") {
-    News.updateMany(
+    await News.updateMany(
       { categories: { $in: [req.params.id] } },
       { $pullAll: { categories: [req.params.id] } }
     );
   }
 
-  category.remove();
+  await deleteChildMenus(req.params.id);
 
   res.status(200).json({
     success: true,
     data: category,
   });
 });
+
+const deleteChildMenus = async (parentId) => {
+  const menus = await NewsCategories.deleteMany({})
+    .where("parentId")
+    .in(parentId);
+
+  if (menus && menus.length > 0) {
+    await newsPull(menus);
+  }
+};
+
+const newsPull = async (menus) => {
+  menus.map(async (menu) => {
+    await News.updateMany(
+      { categories: { $in: [menu.id] } },
+      { $pullAll: { categories: [menu.id] } }
+    );
+  });
+};
 
 exports.updateNewsCategory = asyncHandler(async (req, res) => {
   const name = req.body.name;
@@ -158,10 +217,10 @@ exports.updateNewsCategory = asyncHandler(async (req, res) => {
   );
 
   if (!newsCategory) {
-    throw new MyError("Мэдээлэл солигдсонгүй дахин оролдоно уу", 400);
+    throw new MyError("Өгөгдөл солигдсонгүй дахин оролдоно уу", 400);
   }
   res.status(200).json({
     success: true,
-    data: category,
+    data: newsCategory,
   });
 });

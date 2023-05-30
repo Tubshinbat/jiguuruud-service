@@ -4,22 +4,20 @@ const { protect, authorize } = require("../middleware/protect");
 
 const {
   createBanner,
-  getBanner,
   getBanners,
+  getFullData,
   multDeleteBanner,
+  getBanner,
   updateBanner,
-  getCounBanner,
-} = require("../controller/Banners");
+} = require("../controller/Banner");
 
 router
   .route("/")
   .post(protect, authorize("admin", "operator"), createBanner)
   .get(getBanners);
-
 router
-  .route("/count")
-  .get(protect, authorize("admin", "operator"), getCounBanner);
-
+  .route("/excel")
+  .get(protect, authorize("admin", "operator"), getFullData);
 router.route("/delete").delete(protect, authorize("admin"), multDeleteBanner);
 router
   .route("/:id")

@@ -8,6 +8,7 @@ const {
   multDeleteNews,
   updateNews,
   getOneNews,
+  excelData,
   getNewsCount,
 } = require("../controller/News");
 
@@ -19,6 +20,9 @@ router
 router
   .route("/count")
   .get(protect, authorize("admin", "operator"), getNewsCount);
+
+router.route("/excel").get(excelData);
+
 router.route("/delete").delete(protect, authorize("admin"), multDeleteNews);
 router
   .route("/:id")

@@ -26,9 +26,6 @@ const NewsSchema = new mongoose.Schema({
     details: {
       type: String,
     },
-    shortDetails: {
-      type: String,
-    },
   },
 
   eng: {
@@ -39,18 +36,23 @@ const NewsSchema = new mongoose.Schema({
     details: {
       type: String,
     },
-    shortDetails: {
-      type: String,
-    },
   },
 
   type: {
     type: String,
-    enum: ["default", "picture"],
+    enum: ["default", "audio", "video"],
     default: "default",
   },
 
   pictures: {
+    type: [String],
+  },
+
+  videos: {
+    type: [String],
+  },
+
+  audios: {
     type: [String],
   },
 
@@ -60,9 +62,7 @@ const NewsSchema = new mongoose.Schema({
       ref: "NewsCategory",
     },
   ],
-  tags: {
-    type: [String],
-  },
+
   views: {
     type: Number,
     default: 0,

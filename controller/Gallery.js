@@ -1,29 +1,18 @@
-const Faq = require("../models/Faq");
+const Gallery = require("../models/Gallery");
 const User = require("../models/User");
 const MyError = require("../utils/myError");
 const asyncHandler = require("express-async-handler");
 // const fs = require("fs");
 const paginate = require("../utils/paginate");
 const { valueRequired } = require("../lib/check");
+const { imageDelete } = require("../lib/photoUpload");
 
-exports.createFaq = asyncHandler(async (req, res, next) => {
-  const language = req.cookies.language || "mn";
+exports.createGallery = asyncHandler(async (req, res, next) => {
   req.body.createUser = req.userId;
-
-  const question = req.body.question;
-  const answer = req.body.answer;
-
-  ["answer", "question"].map((data) => delete req.body[data]);
-
-  req.body[language] = {
-    question,
-    answer,
-  };
-
-  const faq = await Faq.create(req.body);
+  const gallery = await Gallery.create(req.body);
   res.status(200).json({
     success: true,
-    data: faq,
+    data: gallery,
   });
 });
 
@@ -34,7 +23,7 @@ const useSearch = async (userFirstname) => {
   return userData;
 };
 
-exports.getFaqs = asyncHandler(async (req, res, next) => {
+exports.getGallerys = asyncHandler(async (req, res, next) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 25;
   let sort = req.query.sort || { createAt: -1 };
@@ -42,26 +31,12 @@ exports.getFaqs = asyncHandler(async (req, res, next) => {
 
   // COST FIELDS
   const name = req.query.name;
-  const answer = req.query.answer;
-  const question = req.query.question;
   const createUser = req.query.createUser;
   const updateUser = req.query.updateUser;
-  const status = req.query.status;
-  const tags = req.query.tags;
-
-  const query = Faq.find();
+  const query = Gallery.find();
 
   if (valueRequired(name))
     query.find({ name: { $regex: ".*" + name + ".*", $options: "i" } });
-
-  if (valueRequired(question))
-    query.find({ question: { $regex: ".*" + question + ".*", $options: "i" } });
-
-  if (valueRequired(tags))
-    query.find({ tags: { $regex: ".*" + tags + ".*", $options: "i" } });
-
-  if (valueRequired(answer))
-    query.find({ answer: { $regex: ".*" + answer + ".*", $options: "i" } });
 
   if (valueRequired(createUser)) {
     const userData = await useSearch(createUser);
@@ -86,12 +61,6 @@ exports.getFaqs = asyncHandler(async (req, res, next) => {
     } else {
       query.sort(sort);
     }
-  }
-
-  if (valueRequired(status)) {
-    if (status.split(",").length > 1) {
-      query.where("status").in(status.split(","));
-    } else query.where("status").equals(status);
   }
 
   query.select(select);
@@ -102,15 +71,15 @@ exports.getFaqs = asyncHandler(async (req, res, next) => {
   const clonedQuery = new qc();
   const result = await clonedQuery.count();
 
-  const pagination = await paginate(page, limit, Faq, result);
+  const pagination = await paginate(page, limit, Gallery, result);
   query.limit(limit);
   query.skip(pagination.start - 1);
-  const faq = await query.exec();
+  const gallery = await query.exec();
 
   res.status(200).json({
     success: true,
-    count: faq.length,
-    data: faq,
+    count: gallery.length,
+    data: gallery,
     pagination,
   });
 });
@@ -121,26 +90,11 @@ exports.getFullData = asyncHandler(async (req, res, next) => {
 
   // COST FIELDS
   const name = req.query.name;
-  const answer = req.query.answer;
-  const question = req.query.question;
-  const createUser = req.query.createUser;
-  const updateUser = req.query.updateUser;
-  const status = req.query.status;
-  const tags = req.query.tags;
 
-  const query = Faq.find();
+  const query = Gallery.find();
 
   if (valueRequired(name))
     query.find({ name: { $regex: ".*" + name + ".*", $options: "i" } });
-
-  if (valueRequired(tags))
-    query.find({ tags: { $regex: ".*" + tags + ".*", $options: "i" } });
-
-  if (valueRequired(question))
-    query.find({ question: { $regex: ".*" + question + ".*", $options: "i" } });
-
-  if (valueRequired(answer))
-    query.find({ answer: { $regex: ".*" + answer + ".*", $options: "i" } });
 
   if (valueRequired(createUser)) {
     const userData = await useSearch(createUser);
@@ -167,84 +121,78 @@ exports.getFullData = asyncHandler(async (req, res, next) => {
     }
   }
 
-  if (valueRequired(status)) query.where("status").equals(status);
-
   query.select(select);
   query.populate({ path: "createUser", select: "firstname -_id" });
   query.populate({ path: "updateUser", select: "firstname -_id" });
 
-  const faqs = await query.exec();
+  const gallerys = await query.exec();
 
   res.status(200).json({
     success: true,
-    count: faqs.length,
-    data: faqs,
+    count: gallerys.length,
+    data: gallerys,
   });
 });
 
-exports.multDeleteFaq = asyncHandler(async (req, res, next) => {
+exports.multDeleteGallery = asyncHandler(async (req, res, next) => {
   const ids = req.queryPolluted.id;
-  const findFaq = await Faq.find({ _id: { $in: ids } });
+  const findGallery = await Gallery.find({ _id: { $in: ids } });
 
-  if (findFaq.length <= 0) {
+  if (findGallery.length <= 0) {
     throw new MyError("Таны сонгосон мэдээллүүд олдсонгүй", 400);
   }
 
-  const faq = await Faq.deleteMany({ _id: { $in: ids } });
+  findGallery.map(async (el) => {
+    el.picture && (await imageDelete(el.picture));
+  });
+
+  const gallery = await Gallery.deleteMany({ _id: { $in: ids } });
 
   res.status(200).json({
     success: true,
   });
 });
 
-exports.getFaq = asyncHandler(async (req, res, next) => {
-  const faq = await Faq.findByIdAndUpdate(req.params.id)
+exports.getGallery = asyncHandler(async (req, res, next) => {
+  const gallery = await Gallery.findByIdAndUpdate(req.params.id)
     .populate("createUser")
     .populate("updateUser");
 
-  if (!faq) {
+  if (!gallery) {
     throw new MyError("Тухайн мэдээлэл олдсонгүй. ", 404);
   }
 
   res.status(200).json({
     success: true,
-    data: faq,
+    data: gallery,
   });
 });
 
-exports.updateFaq = asyncHandler(async (req, res, next) => {
-  let faq = await Faq.findById(req.params.id);
-  const { question, answer } = req.body;
-  const language = req.cookies.language || "mn";
+exports.updateGallery = asyncHandler(async (req, res, next) => {
+  let gallery = await Gallery.findById(req.params.id);
 
-  language === "eng" ? delete req.body.mn : delete req.body.eng;
-  req.body[language] = {
-    question,
-    answer,
-  };
-
-  if (!faq) {
+  if (!gallery) {
     throw new MyError("Тухайн мэдээлэл олдсонгүй. ", 404);
   }
 
   req.body.updateUser = req.userId;
   req.body.updateAt = Date.now();
 
-  faq = await Faq.findByIdAndUpdate(req.params.id, req.body, {
+  gallery = await Gallery.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
   });
 
   res.status(200).json({
     success: true,
-    data: faq,
+    data: gallery,
   });
 });
 
-exports.getCountFaq = asyncHandler(async (req, res, next) => {
-  const faq = await Faq.count();
+exports.getCountGallery = asyncHandler(async (req, res, next) => {
+  const gallery = await Gallery.count();
   res.status(200).json({
     success: true,
-    data: faq,
+    data: gallery,
   });
 });

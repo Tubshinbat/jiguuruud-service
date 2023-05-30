@@ -26,45 +26,41 @@ exports.createWebinfo = asyncHandler(async (req, res) => {
   });
 });
 
+exports.getWebinfo = asyncHandler(async (req, res) => {
+  const webInfo = await Webinfo.findOne().sort({
+    createAt: -1,
+  });
 
-exports.getWebinfo = asyncHandler(async (req,res) => {
-    const webInfo = await Webinfo.findOne().sort({
-        createAt: -1
-    })
-
-    if(!webInfo){
-        throw new MyError('өгөгдөл олдсонгүй.', 404)
-    }
-    res.status(200).json({
-        success: true,
-        data: webInfo
-    })
+  if (!webInfo) {
+    throw new MyError("өгөгдөл олдсонгүй.", 404);
+  }
+  res.status(200).json({
+    success: true,
+    data: webInfo,
+  });
 });
 
-exports.updateWebInfo = asyncHandler(async (req,res) => {
-    const {name, address, siteInfo, policy, logo, whiteLogo} = req.body;
-    const lang = req.cookies.language || 'mn'
+exports.updateWebInfo = asyncHandler(async (req, res) => {
+  const data = await Webinfo.findOne({}).sort({ createAt: -1 });
+  const { name, address, siteInfo, policy } = req.body;
+  const lang = req.cookies.language || "mn";
 
-    req.body[lang] = {
-        name,
-        address,
-        siteInfo,
-        policy,
-        logo,
-        whiteLogo
-    }
+  req.body[lang] = {
+    name,
+    address,
+    siteInfo,
+    policy,
+  };
 
-    lang === 'eng' ? delete req.body.mn : delete req.body.eng;
+  lang === "eng" ? delete req.body.mn : delete req.body.eng;
 
-    const webInfo = await Webinfo.findByIdAndUpdate(req.params.id, req.body, { 
-        new: true,
-        runValidators
-    });
+  const webInfo = await Webinfo.findByIdAndUpdate(data._id, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
-    res.status(200).json({
-        success:true,
-        data: webInfo,
-    })
-    
-
-})
+  res.status(200).json({
+    success: true,
+    data: webInfo,
+  });
+});
