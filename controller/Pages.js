@@ -550,6 +550,17 @@ exports.getPage = asyncHandler(async (req, res, next) => {
 
 exports.updatePage = asyncHandler(async (req, res, next) => {
   let page = await Page.findById(req.params.id);
+  const language = req.cookies.language || "mn";
+
+  const name = req.body.name;
+  const pageInfo = req.body.pageInfo;
+
+  ["language", "name", "pageInfo"].map((data) => delete req.body[data]);
+
+  req.body[language] = {
+    name,
+    pageInfo,
+  };
 
   if (!page) {
     throw new MyError("Тухайн мэдээ олдсонгүй. ", 404);
