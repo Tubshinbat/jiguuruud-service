@@ -38,7 +38,18 @@ const app = express();
 connectDB();
 
 // Манай рест апиг дуудах эрхтэй сайтуудын жагсаалт :
-var whitelist = ["http://localhost:3000", "http://localhost:3001"];
+var whitelist = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://jiguuruud.mn",
+  "https://www.jiguuruud.mn",
+  "https://admin.jiguuruud.mn",
+  "https://www.admin.jiguuruud.mn",
+  "http://jiguuruud.mn",
+  "http://www.jiguuruud.mn",
+  "http://admin.jiguuruud.mn",
+  "http://www.admin.jiguuruud.mn",
+];
 
 // Өөр домэйн дээр байрлах клиент вэб аппуудаас шаардах шаардлагуудыг энд тодорхойлно
 var corsOptions = {
