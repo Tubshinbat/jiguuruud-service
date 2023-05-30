@@ -1,0 +1,93 @@
+[{
+  "_id": {
+    "$oid": "6473a87aea404607d0823e94"
+  },
+  "status": true,
+  "star": false,
+  "type": "default",
+  "pictures": [],
+  "videos": [],
+  "audios": [],
+  "categories": [],
+  "views": 0,
+  "createUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "mn": {
+    "name": "Монгол тест",
+    "details": "<p>Монгол тест</p>"
+  },
+  "createAt": {
+    "$date": "2023-05-28T19:16:10.556Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-28T19:16:26.486Z"
+  },
+  "slug": "mongol-test1685301370561",
+  "__v": 0,
+  "eng": {
+    "name": "Англи тест",
+    "details": "<p>Англи тест</p>"
+  },
+  "updateUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  }
+},{
+  "_id": {
+    "$oid": "6473aa35ea404607d082405b"
+  },
+  "status": true,
+  "star": false,
+  "type": "default",
+  "pictures": [
+    "1685301812524_logo.jpg"
+  ],
+  "videos": [],
+  "audios": [],
+  "categories": [],
+  "views": 0,
+  "createUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "eng": {
+    "name": "xxx",
+    "details": "<p>xx</p>"
+  },
+  "createAt": {
+    "$date": "2023-05-28T19:23:33.254Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-28T19:23:33.255Z"
+  },
+  "slug": "xxx1685301813256",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "64756da1c50f9721bca5e7b2"
+  },
+  "status": true,
+  "star": true,
+  "type": "default",
+  "pictures": [
+    "1685417377098_213.jpg"
+  ],
+  "videos": [],
+  "audios": [],
+  "categories": [],
+  "views": 0,
+  "createUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "mn": {
+    "name": "test",
+    "details": "<p>test</p>"
+  },
+  "createAt": {
+    "$date": "2023-05-30T03:29:37.885Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-30T03:29:37.885Z"
+  },
+  "slug": "test1685417377890",
+  "__v": 0
+}]

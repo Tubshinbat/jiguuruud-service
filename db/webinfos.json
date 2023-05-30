@@ -1,0 +1,25 @@
+[{
+  "_id": {
+    "$oid": "6473bac82dee96429cf958bd"
+  },
+  "phone": 88011197,
+  "email": "tuvshinbat596@gmail.com",
+  "logo": "1685338768496_jiguurlogo.png",
+  "whiteLogo": "1685338772155_jiguurlogowhite.png",
+  "mn": {
+    "name": "Tuvshinbat Bayandelger",
+    "address": "13 bair 22 toot",
+    "siteInfo": "124",
+    "policy": "<p>124</p>"
+  },
+  "updateAt": {
+    "$date": "2023-05-28T20:34:16.338Z"
+  },
+  "__v": 0,
+  "eng": {
+    "name": "tetsewasdasda",
+    "address": "asd",
+    "siteInfo": "asdasd",
+    "policy": "<p>asd</p>"
+  }
+}]

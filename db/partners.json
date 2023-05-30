@@ -1,0 +1,43 @@
+[{
+  "_id": {
+    "$oid": "64757115c50f9721bca5eeea"
+  },
+  "status": true,
+  "views": 0,
+  "name": "БАРИЛГА, ХОТ БАЙГУУЛАЛТЫН ЯАМ",
+  "link": "https://mcud.gov.mn/",
+  "companyInfo": "<p>https://mcud.gov.mn/</p>",
+  "logo": "1685418260325_1678101115390_download.jpg",
+  "createUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "createAt": {
+    "$date": "2023-05-30T03:44:21.042Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-30T03:44:21.042Z"
+  },
+  "slug": "barilga-hot-bayguulaltyn-yaam",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "64757299c50f9721bca5efb4"
+  },
+  "status": true,
+  "views": 0,
+  "name": "Барилгын хөгжлийн төв",
+  "link": "https://barilga.gov.mn/",
+  "companyInfo": "<p>Барилгын хөгжлийн төв</p>",
+  "logo": "1685418649261_1670773694813_logo.png",
+  "createUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "createAt": {
+    "$date": "2023-05-30T03:50:49.911Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-30T03:50:49.911Z"
+  },
+  "slug": "barilgyn-hogzhliyn-tov",
+  "__v": 0
+}]

@@ -1,0 +1,100 @@
+[{
+  "_id": {
+    "$oid": "64744c214227c506300f6f78"
+  },
+  "status": true,
+  "isDirect": true,
+  "isModel": false,
+  "direct": "/",
+  "mn": {
+    "name": "Эхлэл"
+  },
+  "position": 0,
+  "createAt": {
+    "$date": "2023-05-29T06:54:25.401Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-29T06:54:25.401Z"
+  },
+  "slug": "ehlel1685343265403",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "64744c2a4227c506300f6f7e"
+  },
+  "status": true,
+  "isDirect": false,
+  "isModel": false,
+  "mn": {
+    "name": "Бидний тухай"
+  },
+  "position": 1,
+  "createAt": {
+    "$date": "2023-05-29T06:54:34.244Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-29T06:54:34.244Z"
+  },
+  "slug": "bidniy-tuhay1685343274245",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "64744c344227c506300f6f84"
+  },
+  "status": true,
+  "isDirect": false,
+  "isModel": true,
+  "model": "services",
+  "mn": {
+    "name": "Үйлчилгээ"
+  },
+  "position": 2,
+  "createAt": {
+    "$date": "2023-05-29T06:54:44.027Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-29T06:54:44.027Z"
+  },
+  "slug": "uylchilgee1685343284028",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "64744c3c4227c506300f6f8a"
+  },
+  "status": true,
+  "isDirect": false,
+  "isModel": true,
+  "model": "news",
+  "mn": {
+    "name": "Мэдээ мэдээлэл"
+  },
+  "position": 3,
+  "createAt": {
+    "$date": "2023-05-29T06:54:52.546Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-29T06:54:52.546Z"
+  },
+  "slug": "medee-medeelel1685343292547",
+  "__v": 0
+},{
+  "_id": {
+    "$oid": "647588b6c50f9721bca6199a"
+  },
+  "status": true,
+  "isDirect": false,
+  "isModel": true,
+  "model": "contact",
+  "mn": {
+    "name": "Холбоо барих"
+  },
+  "position": 4,
+  "createAt": {
+    "$date": "2023-05-30T05:25:10.735Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-30T05:25:10.735Z"
+  },
+  "slug": "holboo-barih1685424310737",
+  "__v": 0
+}]

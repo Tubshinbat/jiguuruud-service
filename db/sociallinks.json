@@ -1,0 +1,20 @@
+[{
+  "_id": {
+    "$oid": "647435d64227c506300f6a5c"
+  },
+  "name": "facebook",
+  "link": "https://www.facebook.com/profile.php?id=100063732399969",
+  "createUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "updateUser": {
+    "$oid": "635a57ece393ed7df65b1b20"
+  },
+  "createAt": {
+    "$date": "2023-05-29T05:19:18.894Z"
+  },
+  "updateAt": {
+    "$date": "2023-05-29T05:19:18.894Z"
+  },
+  "__v": 0
+}]
